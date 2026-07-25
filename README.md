@@ -395,31 +395,45 @@ linkado — `supabase db push` aplica migrations pendentes direto.
   terceiro procedia: faltava `debugShowCheckedModeBanner: false` no
   `MaterialApp` — a faixa vermelha "DEBUG" aparecia em todo screenshot
   do simulador. Adicionado e confirmado visualmente.
+- **`contato@spacerout.com.br` recebendo e-mail** (2026-07-24): domínio
+  já estava com nameservers no Cloudflare desde a verificação do Resend
+  (confirmado via `dig NS`, nada a mexer no Registro.br). Configurado
+  **Cloudflare Email Routing**: ativado o serviço (cria MX
+  `route1/2/3.mx.cloudflare.net` + TXT SPF/DKIM na raiz do domínio —
+  não colide com o MX do Resend, que fica em `send.spacerout.com.br`,
+  subdomínio separado), endereço de destino verificado (caixa pessoal
+  do usuário, separada do Gmail de propósito) e regra de roteamento
+  `contato@spacerout.com.br` → esse destino. Levou alguns minutos pra
+  propagar depois de ativado — teste com e-mail real confirmou entrega.
 
 ### 🚧 Em aberto
 
 - [ ] **Lançar no Google Play essa semana** (meta confirmada em
       2026-07-23): Android primeiro por custo (taxa única de USD 25 vs.
       USD 99/ano da Apple). Falta:
-  - [ ] Conta de desenvolvedor Google Play (USD 25, taxa única)
+  - [x] Conta de desenvolvedor Google Play — taxa paga (2026-07-24),
+        cadastro/verificação em andamento, aguardando aprovação da
+        documentação pelo Google
   - [ ] Ficha da loja (descrição, ícones, screenshots do app)
   - [ ] Build de release assinado (`flutter build appbundle`, keystore)
   - [ ] Estratégia freemium "bem aderente" — base já existe (trigger de
         5 itens ativos no schema), falta desenhar a oferta paga
   - [ ] Os itens abaixo (revisar dados de teste, ícone de notificação,
         revisão jurídica) antes de submeter de verdade
-- [ ] **`contato@spacerout.com.br` não recebe e-mail nenhum hoje**: só existe
-      MX em `send.spacerout.com.br` (pro Resend/SES processar bounce de
-      envio), a raiz do domínio não tem MX — quem mandar e-mail pra
-      `contato@` recebe bounce de volta. Esse endereço já é citado como
-      canal de contato/DPO no site (`docs/`) e no FAQ. Caminho discutido
-      (2026-07-23): **Cloudflare Email Routing** (grátis, encaminha pro
-      Gmail) — exige trocar os nameservers do domínio no Registro.br pra
-      o Cloudflare (ele passa a administrar todo o DNS, não só um
-      registro) e recriar lá os registros que já existem (Resend:
-      DKIM/SPF/DMARC/MX; GitHub Pages: 4 A + CNAME `www`). Alternativa
-      mais simples: Google Workspace (pago) ou trocar o e-mail do site
-      pro Gmail pessoal enquanto isso não for feito.
+- [ ] **Requisitos novos de conta pessoal no Google Play** (descoberto
+      2026-07-24, muda o plano de lançamento desta semana): contas
+      pessoais criadas depois de 13/nov/2023 (a nossa) exigem, antes de
+      liberar produção: (1) **teste fechado com 12 testadores** (número
+      caiu de 20 pra 12 em dez/2024) com opt-in **contínuo por 14 dias
+      corridos** — sair e voltar zera a contagem da pessoa; e (2)
+      **verificação de identidade num Android físico real** (Android
+      10+, sem root, via app do Play Console — emulador não serve).
+      Conta de **Organização** parece ficar isenta das duas exigências,
+      mas essa rota exige D-U-N-S number (até 30 dias) — pior prazo que
+      os 14 dias do teste fechado. Decisão: seguir como pessoa física,
+      já que 14 dias é mais rápido; falta confirmar se o usuário tem um
+      Android físico à mão e reunir os 12 testadores pra começar a
+      contagem o quanto antes.
 - [ ] **Revisão jurídica da política de privacidade**: o texto em
       `docs/privacidade.html` foi escrito com cuidado (cobre LGPD art.
       7º/14/18/41), mas não é validação jurídica formal. Recomendado
