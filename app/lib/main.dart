@@ -3,12 +3,16 @@ import 'dart:io' show Platform;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'core/supabase_config.dart';
 import 'core/ui/theme/app_theme.dart';
 import 'core/ui/tokens/app_typography.dart';
+import 'features/assinatura/data/assinatura_config.dart';
+import 'features/assinatura/data/assinatura_providers.dart';
+import 'features/assinatura/presentation/assinatura_screen.dart';
 import 'features/auth/data/auth_providers.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/convites/presentation/convites_screen.dart';
@@ -39,6 +43,12 @@ Future<void> main() async {
   // não ter GoogleService-Info.plist configurado no Xcode.
   if (Platform.isAndroid) {
     await Firebase.initializeApp();
+    // Assinatura (RevenueCat) — mesmo bloqueio de plataforma que o resto
+    // do app paga/push: iOS fica pra quando o Apple Developer Program
+    // pago existir. `configure` só identifica o SDK; associar a
+    // organização (Purchases.logIn) acontece em vincularAssinaturaProvider,
+    // depois do login.
+    await Purchases.configure(PurchasesConfiguration(AssinaturaConfig.revenueCatApiKey));
   }
   runApp(const ProviderScope(child: SpaceRoutApp()));
 }
@@ -80,6 +90,7 @@ class _AuthGate extends ConsumerWidget {
       data: (usuario) {
         if (usuario == null) return const OnboardingScreen();
         ref.watch(registrarNotificacoesProvider);
+        ref.watch(vincularAssinaturaProvider(usuario['organizacao_id'] as String));
         return usuario['role'] == 'responsavel'
             ? const _DrawerShell(
                 headerTitulo: 'Comando da Missão',
@@ -116,6 +127,7 @@ const _painelResponsavelItens = [
   _PainelItem('Pedidos do Astronauta', Icons.shopping_bag, ResgatesScreen()),
   _PainelItem('Relatório', Icons.bar_chart, RelatorioScreen()),
   _PainelItem('Convites', Icons.person_add, ConvitesScreen()),
+  _PainelItem('Assinatura', Icons.workspace_premium, AssinaturaScreen()),
 ];
 
 /// Missões em aberto (com envio de comprovação), loja pra resgatar

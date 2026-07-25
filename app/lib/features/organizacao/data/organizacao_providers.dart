@@ -16,3 +16,8 @@ final usuarioAtualProvider = FutureProvider<Map<String, dynamic>?>((ref) {
 final astronautasProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
   return ref.watch(organizacaoRepositoryProvider).listarAstronautas();
 });
+
+/// Plano/tier atual da família — usado na tela de assinatura.
+final organizacaoAtualProvider = FutureProvider.autoDispose<Map<String, dynamic>?>((ref) {
+  return ref.watch(organizacaoRepositoryProvider).buscarOrganizacaoAtual();
+});

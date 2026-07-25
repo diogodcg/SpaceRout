@@ -19,6 +19,20 @@ class OrganizacaoRepository {
     return _supabase.rpc('criar_organizacao', params: {'p_nome': nome});
   }
 
+  /// Plano da organização (`gratuito`/`anual`) e teto de usuários — usado na
+  /// tela de assinatura. Não confundir com [buscarUsuarioAtual] (dados do
+  /// usuário individual, não da família).
+  Future<Map<String, dynamic>?> buscarOrganizacaoAtual() async {
+    final usuario = await buscarUsuarioAtual();
+    final orgId = usuario?['organizacao_id'] as String?;
+    if (orgId == null) return null;
+    return _supabase
+        .from('organizacoes_familiares')
+        .select('id, nome, plano, plano_max_usuarios')
+        .eq('id', orgId)
+        .maybeSingle();
+  }
+
   /// Lista de astronautas (filhos) da organização, com saldo — usada nos
   /// formulários de missão/suprimento (multi-seleção) e na tela Relatório.
   Future<List<Map<String, dynamic>>> listarAstronautas() async {

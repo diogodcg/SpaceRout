@@ -448,6 +448,32 @@ linkado — `supabase db push` aplica migrations pendentes direto.
   campo "Authorization Header", e integrar o SDK `purchases_flutter` no
   app (paywall, `Purchases.logIn`, tela de gerenciar assinatura) — nada
   disso feito ainda.
+- **SDK `purchases_flutter` + tela "Assinatura"** (2026-07-25,
+  `app/lib/features/assinatura/`): `Purchases.configure` em `main.dart`
+  (mesmo ponto de `Firebase.initializeApp`, Android só, mesmo bloqueio de
+  sempre) usando a chave de **Test configuration** do RevenueCat
+  (`AssinaturaConfig.revenueCatApiKey` — simula compras em sandbox sem
+  depender do Play Console, enquanto a conta PJ não sai). Novo
+  `vincularAssinaturaProvider` chama `Purchases.logIn(organizacaoId)`
+  assim que a organização é conhecida (mesmo padrão de
+  `registrarNotificacoesProvider`, ligado no `_AuthGate`). Nova tela
+  **Assinatura** no Drawer do responsável: mostra o plano atual (lê
+  `organizacoes_familiares.plano`/`plano_max_usuarios` via novo
+  `organizacaoAtualProvider`) e lista as ofertas do RevenueCat com botão
+  de compra/restaurar, usando `descreverErro` pro mesmo padrão de erro
+  amigável das outras telas. Testado ponta a ponta no emulador Android:
+  login real disparou o `logIn` e o app_user_id bateu exatamente com o
+  `organizacao_id` do usuário no banco (conferido via `supabase db
+  query`); a tela renderizou corretamente tanto o estado vazio (sem
+  produtos reais ainda) quanto, depois de descoberto que o RevenueCat já
+  tinha um produto de exemplo do próprio onboarding deles ("Yearly",
+  Test Store), o fluxo de compra completo — RevenueCat mostrou o dialog
+  nativo de simulação, a compra foi confirmada, e como o product_id
+  ("yearly") não é nenhum dos nossos, o webhook (se chegou a ser
+  chamado) teria retornado 422 sem tocar no banco — confirmado que
+  `organizacoes_familiares.plano` continuou `gratuito` depois. **Falta**:
+  trocar a chave de teste pela Public API Key de verdade e os produtos
+  reais assim que o Play Console estiver conectado (ver item acima).
 
 ### 🚧 Em aberto
 
@@ -459,14 +485,15 @@ linkado — `supabase db push` aplica migrations pendentes direto.
         documentação pelo Google
   - [ ] Ficha da loja (descrição, ícones, screenshots do app)
   - [ ] Build de release assinado (`flutter build appbundle`, keystore)
-  - [ ] Estratégia freemium — modelo, schema e webhook prontos (ver
-        "Feito" acima). Falta: criar conta no RevenueCat, cadastrar os
-        produtos `spacerout_familia_anual` (Tier 1, R$89,90/ano) e
-        `spacerout_familia_grande_anual` (Tier 2, R$149,90/ano) no
-        Google Play Console, conectar ao RevenueCat, configurar o
-        webhook lá com o segredo já guardado no Supabase Vault, e
-        integrar `purchases_flutter` no app (paywall +
-        `Purchases.logIn(organizacaoId)`)
+  - [ ] Estratégia freemium — modelo, schema, webhook e SDK no app
+        prontos e testados em sandbox (ver "Feito" acima). Falta, tudo
+        bloqueado até a conta de desenvolvedor Google Play virar PJ (ver
+        item abaixo): conectar o Play Console ao app no RevenueCat
+        (service account), cadastrar os produtos
+        `spacerout_familia_anual` (Tier 1, R$89,90/ano) e
+        `spacerout_familia_grande_anual` (Tier 2, R$149,90/ano), e
+        trocar a chave de Test configuration pela Public API Key real
+        em `AssinaturaConfig`
   - [ ] Os itens abaixo (revisar dados de teste, ícone de notificação,
         revisão jurídica) antes de submeter de verdade
 - [ ] **Requisitos novos de conta pessoal no Google Play** (descoberto
