@@ -405,6 +405,24 @@ linkado — `supabase db push` aplica migrations pendentes direto.
   do usuário, separada do Gmail de propósito) e regra de roteamento
   `contato@spacerout.com.br` → esse destino. Levou alguns minutos pra
   propagar depois de ativado — teste com e-mail real confirmou entrega.
+- **Modelo de dados do freemium com tiers pagos** (2026-07-25,
+  `supabase/migrations/20260725000000_modelo_freemium_tiers_pagos.sql`,
+  aplicado no remoto via `supabase db push --linked`): trigger
+  `verificar_limite_freemium` apertado de 5 pra 3 itens ativos; coluna
+  nova `organizacoes_familiares.plano_max_usuarios` (NULL enquanto
+  gratuito — nesse plano não há teto de gente, só de itens); trigger
+  novo `verificar_limite_usuarios_convite` que barra criar convite além
+  do teto do plano pago. Decisão de design: a trava de tamanho de
+  família fica na **criação do convite**, não num trigger na tabela
+  `usuarios` — a linha de `usuarios` é criada dentro de
+  `aceitar_convite_no_login`, que roda como trigger `AFTER INSERT` em
+  `auth.users`; uma exceção ali quebraria a transação de login/cadastro
+  do Supabase Auth pro convidado em vez de mostrar um aviso amigável pra
+  quem está convidando. `friendly_error.dart` corrigido (as mensagens de
+  missão/suprimento ainda citavam o limite antigo de 5) e ganhou a
+  mensagem do novo erro de limite de usuários. **Falta**: integração
+  RevenueCat, que é quem vai popular `plano`/`plano_max_usuarios` de
+  verdade quando alguém assinar (ver "Em aberto").
 
 ### 🚧 Em aberto
 
@@ -416,8 +434,12 @@ linkado — `supabase db push` aplica migrations pendentes direto.
         documentação pelo Google
   - [ ] Ficha da loja (descrição, ícones, screenshots do app)
   - [ ] Build de release assinado (`flutter build appbundle`, keystore)
-  - [ ] Estratégia freemium "bem aderente" — base já existe (trigger de
-        5 itens ativos no schema), falta desenhar a oferta paga
+  - [ ] Estratégia freemium — modelo e schema prontos (ver "Feito"
+        acima). Falta só a **integração RevenueCat**: produtos/preços
+        nas lojas (Tier 1 até 4 usuários R$89,90/ano; Tier 2 até 7
+        usuários R$149,90/ano) e o webhook que atualiza
+        `organizacoes_familiares.plano`/`plano_max_usuarios` quando uma
+        assinatura é confirmada/renovada/cancelada
   - [ ] Os itens abaixo (revisar dados de teste, ícone de notificação,
         revisão jurídica) antes de submeter de verdade
 - [ ] **Requisitos novos de conta pessoal no Google Play** (descoberto
