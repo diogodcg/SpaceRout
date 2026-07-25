@@ -21,3 +21,8 @@ final astronautasProvider = FutureProvider.autoDispose<List<Map<String, dynamic>
 final organizacaoAtualProvider = FutureProvider.autoDispose<Map<String, dynamic>?>((ref) {
   return ref.watch(organizacaoRepositoryProvider).buscarOrganizacaoAtual();
 });
+
+/// Total de usuários da família — usado pra recomendar o tier certo.
+final totalUsuariosProvider = FutureProvider.autoDispose<int>((ref) {
+  return ref.watch(organizacaoRepositoryProvider).contarUsuarios();
+});

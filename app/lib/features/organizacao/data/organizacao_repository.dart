@@ -43,4 +43,13 @@ class OrganizacaoRepository {
         .order('nome_exibicao');
     return List<Map<String, dynamic>>.from(rows);
   }
+
+  /// Total de usuários (responsáveis + astronautas) da organização — usado
+  /// na tela de assinatura pra recomendar automaticamente o tier que cobre
+  /// o tamanho da família. RLS (`usuarios_select_mesma_org`) já restringe
+  /// às linhas da própria organização, sem precisar filtrar por id aqui.
+  Future<int> contarUsuarios() async {
+    final rows = await _supabase.from('usuarios').select('id');
+    return rows.length;
+  }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/friendly_error.dart';
 import '../../../core/ui/components/primary_space_button.dart';
+import '../../assinatura/presentation/assinatura_screen.dart';
 import '../../organizacao/data/organizacao_providers.dart';
 import '../../organizacao/presentation/astronautas_multi_select.dart';
 import '../data/loja_providers.dart';
@@ -30,6 +31,7 @@ class _PremioFormScreenState extends ConsumerState<PremioFormScreen> {
   };
   bool _loading = false;
   String? _error;
+  bool _erroEhLimitePlano = false;
 
   bool get _editando => widget.premio != null;
 
@@ -43,13 +45,17 @@ class _PremioFormScreenState extends ConsumerState<PremioFormScreen> {
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_editando && _astronautas.isEmpty) {
-      setState(() => _error = 'Selecione um ou mais astronautas.');
+      setState(() {
+        _error = 'Selecione um ou mais astronautas.';
+        _erroEhLimitePlano = false;
+      });
       return;
     }
 
     setState(() {
       _loading = true;
       _error = null;
+      _erroEhLimitePlano = false;
     });
     try {
       final repo = ref.read(lojaRepositoryProvider);
@@ -72,7 +78,10 @@ class _PremioFormScreenState extends ConsumerState<PremioFormScreen> {
       ref.invalidate(premiosListProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      setState(() => _error = descreverErro(e));
+      setState(() {
+        _error = descreverErro(e);
+        _erroEhLimitePlano = ehLimiteDoPlanoGratuito(e);
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -141,6 +150,11 @@ class _PremioFormScreenState extends ConsumerState<PremioFormScreen> {
                   _error!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
+                if (_erroEhLimitePlano)
+                  TextButton(
+                    onPressed: () => AssinaturaScreen.abrir(context),
+                    child: const Text('Assinar'),
+                  ),
               ],
             ],
           ),

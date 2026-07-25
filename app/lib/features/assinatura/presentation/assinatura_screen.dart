@@ -8,12 +8,29 @@ import '../../../core/ui/components/primary_space_button.dart';
 import '../../../core/ui/tokens/app_specs.dart';
 import '../../../core/ui/tokens/app_typography.dart';
 import '../../organizacao/data/organizacao_providers.dart';
+import '../data/assinatura_config.dart';
 import '../data/assinatura_providers.dart';
 
 /// Status do plano atual + lista de ofertas pra assinar/trocar de tier.
 /// Só aparece no menu do responsável — é quem decide o plano da família.
+///
+/// Usada de dois jeitos: como item do `_DrawerShell` (sem Scaffold
+/// próprio, a AppBar/Drawer é compartilhada) e, via [abrir], empurrada
+/// como rota independente com sua própria AppBar — é o atalho "Assinar"
+/// mostrado quando o limite do plano gratuito é atingido em outra tela.
 class AssinaturaScreen extends ConsumerStatefulWidget {
   const AssinaturaScreen({super.key});
+
+  static void abrir(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Assinatura')),
+          body: const AssinaturaScreen(),
+        ),
+      ),
+    );
+  }
 
   @override
   ConsumerState<AssinaturaScreen> createState() => _AssinaturaScreenState();
@@ -69,6 +86,7 @@ class _AssinaturaScreenState extends ConsumerState<AssinaturaScreen> {
   Widget build(BuildContext context) {
     final organizacao = ref.watch(organizacaoAtualProvider);
     final ofertas = ref.watch(ofertasAssinaturaProvider);
+    final totalUsuarios = ref.watch(totalUsuariosProvider).value;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpecs.spaceL),
@@ -88,8 +106,8 @@ class _AssinaturaScreenState extends ConsumerState<AssinaturaScreen> {
           const SizedBox(height: AppSpecs.spaceM),
           ofertas.when(
             data: (offerings) {
-              final pacotes = offerings.current?.availablePackages ?? const [];
-              if (pacotes.isEmpty) {
+              final todosPacotes = offerings.current?.availablePackages ?? const [];
+              if (todosPacotes.isEmpty) {
                 return const EmptyState(
                   title: 'Nenhum plano disponível ainda',
                   message:
@@ -97,12 +115,46 @@ class _AssinaturaScreenState extends ConsumerState<AssinaturaScreen> {
                       'opções.',
                 );
               }
+
+              // Esconde planos que não cobrem o tamanho atual da família —
+              // não faz sentido oferecer o Tier 1 (4 usuários) pra quem já
+              // tem 6. Produto sem entrada em maxUsuariosPorProduto (ainda
+              // não cadastrado, ou o "yearly" de exemplo do RevenueCat) fica
+              // sempre visível, sem recomendação. `.split(':').first` cobre
+              // o formato "productId:basePlanId" que o Android usa.
+              int? maxDoPacote(Package p) => AssinaturaConfig
+                  .maxUsuariosPorProduto[p.storeProduct.identifier.split(':').first];
+
+              final pacotes = totalUsuarios == null
+                  ? todosPacotes
+                  : todosPacotes.where((p) {
+                      final max = maxDoPacote(p);
+                      return max == null || totalUsuarios <= max;
+                    }).toList();
+
+              if (pacotes.isEmpty) {
+                return EmptyState(
+                  title: 'Nenhum plano cobre sua família ainda',
+                  message:
+                      'Sua família tem $totalUsuarios pessoas — ainda não temos um plano '
+                      'pra esse tamanho. Fale com a gente em contato@spacerout.com.br.',
+                );
+              }
+
+              String? recomendadoId;
+              if (totalUsuarios != null) {
+                final comMax = pacotes.where((p) => maxDoPacote(p) != null).toList()
+                  ..sort((a, b) => maxDoPacote(a)!.compareTo(maxDoPacote(b)!));
+                if (comMax.isNotEmpty) recomendadoId = comMax.first.identifier;
+              }
+
               return Column(
                 children: [
                   for (final pacote in pacotes) ...[
                     _OfertaCard(
                       pacote: pacote,
                       comprando: _comprandoPacote == pacote.identifier,
+                      recomendado: pacote.identifier == recomendadoId,
                       onComprar: () => _comprar(pacote),
                     ),
                     const SizedBox(height: AppSpecs.spaceM),
@@ -159,10 +211,16 @@ class _StatusPlano extends StatelessWidget {
 }
 
 class _OfertaCard extends StatelessWidget {
-  const _OfertaCard({required this.pacote, required this.comprando, required this.onComprar});
+  const _OfertaCard({
+    required this.pacote,
+    required this.comprando,
+    required this.recomendado,
+    required this.onComprar,
+  });
 
   final Package pacote;
   final bool comprando;
+  final bool recomendado;
   final VoidCallback onComprar;
 
   @override
@@ -173,10 +231,23 @@ class _OfertaCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppSpecs.radiusM),
+        border: recomendado
+            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (recomendado) ...[
+            Text(
+              'RECOMENDADO PRA SUA FAMÍLIA',
+              style: AppTypography.bodyText.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSpecs.spaceXS),
+          ],
           Text(produto.title, style: AppTypography.cardTitle),
           const SizedBox(height: AppSpecs.spaceXS),
           Text(produto.description, style: AppTypography.bodyText),

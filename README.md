@@ -474,6 +474,39 @@ linkado — `supabase db push` aplica migrations pendentes direto.
   `organizacoes_familiares.plano` continuou `gratuito` depois. **Falta**:
   trocar a chave de teste pela Public API Key de verdade e os produtos
   reais assim que o Play Console estiver conectado (ver item acima).
+- **Gatilho de upgrade no limite gratuito + recomendação automática de
+  tier** (2026-07-25): usuário perguntou por que criar uma tela em vez
+  de vender "direto pelo Google Play" — esclarecido que o Play Billing
+  não tem loja própria, é sempre o app quem inicia a compra chamando o
+  SDK, então a tela é o único jeito de existir um botão "Assinar". A
+  partir disso, dois pedidos do usuário: (1) mostrar esse botão no
+  próprio erro de limite, não só escondido no menu; (2) recomendar
+  automaticamente o tier certo pelo tamanho da família, "pra ficar mais
+  simples". Implementado: `ehLimiteDoPlanoGratuito` (novo, em
+  `friendly_error.dart`) identifica os 3 erros de trava de plano
+  (missão/suprimento/convite); todo `SnackBar`/erro inline que já usava
+  `descreverErro` ganhou um botão **Assinar** condicional que abre
+  `AssinaturaScreen.abrir(context)` — rota independente com AppBar
+  própria, já que a tela original não tem Scaffold (é pensada pra virar
+  item do Drawer). Corrigido de passagem: `convite_form_screen.dart`
+  usava `e.toString()` cru em vez de `descreverErro` — o erro do
+  trigger novo de limite de usuários apareceria com jargão técnico de
+  banco se não fosse corrigido agora. Para a recomendação de tier: novo
+  `totalUsuariosProvider` conta `usuarios` da organização (RLS já filtra
+  por organização, não precisou de filtro explícito); a tela de
+  assinatura esconde ofertas que não cobrem o tamanho atual da família
+  e marca a mais barata que cobre como "RECOMENDADO PRA SUA FAMÍLIA" —
+  produto sem entrada em `AssinaturaConfig.maxUsuariosPorProduto` (como
+  o "Yearly" de exemplo) fica sempre visível, sem recomendação, pra não
+  desaparecer testes/produtos ainda não mapeados. Testado ponta a ponta
+  no emulador: como a organização real já tinha 5 missões ativas de
+  antes do limite apertar pra 3, bastou tentar reativar uma pra bater
+  na trava de verdade — o snackbar "O plano gratuito permite no máximo 3
+  missões ativas..." apareceu com o botão Assinar, que abriu a tela
+  corretamente com seta de voltar. A parte de recomendação por tier só
+  vai ser visível de verdade quando os produtos reais existirem (ver
+  item acima) — a lógica está escrita e comentada, mas o teste visual
+  do badge fica pendente até lá.
 
 ### 🚧 Em aberto
 

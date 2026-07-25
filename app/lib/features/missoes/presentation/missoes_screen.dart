@@ -5,6 +5,7 @@ import '../../../core/confirm_delete.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/ui/components/empty_state.dart';
 import '../../../core/ui/components/mission_card.dart';
+import '../../assinatura/presentation/assinatura_screen.dart';
 import '../../organizacao/data/organizacao_providers.dart';
 import '../data/missoes_providers.dart';
 import '../data/recorrencia_labels.dart';
@@ -34,7 +35,14 @@ class MissoesScreen extends ConsumerWidget {
       ref.invalidate(missoesListProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(descreverErro(e))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(descreverErro(e)),
+            action: ehLimiteDoPlanoGratuito(e)
+                ? SnackBarAction(label: 'Assinar', onPressed: () => AssinaturaScreen.abrir(context))
+                : null,
+          ),
+        );
       }
     }
   }

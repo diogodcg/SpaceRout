@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/friendly_error.dart';
 import '../../../core/ui/components/primary_space_button.dart';
+import '../../assinatura/presentation/assinatura_screen.dart';
 import '../../organizacao/data/organizacao_providers.dart';
 import '../data/convites_providers.dart';
 
@@ -26,6 +28,7 @@ class _ConviteFormScreenState extends ConsumerState<ConviteFormScreen> {
   String _role = 'astronauta';
   bool _loading = false;
   String? _error;
+  bool _erroEhLimitePlano = false;
 
   @override
   void dispose() {
@@ -39,6 +42,7 @@ class _ConviteFormScreenState extends ConsumerState<ConviteFormScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _erroEhLimitePlano = false;
     });
     try {
       final usuario = ref.read(usuarioAtualProvider).value;
@@ -50,7 +54,10 @@ class _ConviteFormScreenState extends ConsumerState<ConviteFormScreen> {
       ref.invalidate(convitesListProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() {
+        _error = descreverErro(e);
+        _erroEhLimitePlano = ehLimiteDoPlanoGratuito(e);
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -99,6 +106,11 @@ class _ConviteFormScreenState extends ConsumerState<ConviteFormScreen> {
                   _error!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
+                if (_erroEhLimitePlano)
+                  TextButton(
+                    onPressed: () => AssinaturaScreen.abrir(context),
+                    child: const Text('Assinar'),
+                  ),
               ],
             ],
           ),

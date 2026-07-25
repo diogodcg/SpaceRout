@@ -21,3 +21,12 @@ String descreverErro(Object erro) {
   }
   return erro.toString();
 }
+
+/// true quando o erro é uma das travas de plano gratuito (item ou usuário)
+/// — usado pra decidir se mostra um atalho "Assinar" junto do aviso.
+bool ehLimiteDoPlanoGratuito(Object erro) {
+  if (erro is! PostgrestException || erro.code != '23514') return false;
+  return erro.message.contains('coordenadas_voo') ||
+      erro.message.contains('suprimentos_cosmicos') ||
+      erro.message.contains('convites_familiares');
+}
