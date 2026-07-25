@@ -423,6 +423,31 @@ linkado — `supabase db push` aplica migrations pendentes direto.
   mensagem do novo erro de limite de usuários. **Falta**: integração
   RevenueCat, que é quem vai popular `plano`/`plano_max_usuarios` de
   verdade quando alguém assinar (ver "Em aberto").
+- **Webhook do RevenueCat** (2026-07-25, `supabase/functions/webhook-revenuecat/`,
+  deployado): recebe eventos de assinatura (compra, renovação, upgrade/
+  downgrade de tier, expiração) e atualiza
+  `organizacoes_familiares.plano`/`plano_max_usuarios`. Autenticado por
+  segredo compartilhado no header `Authorization` (`REVENUECAT_WEBHOOK_SECRET`,
+  mesmo padrão de `x-convite-secret`/`x-cron-secret`). Pressupõe que o
+  app chama `Purchases.logIn(organizacaoId)` antes do paywall — é assim
+  que `event.app_user_id` chega já sendo o id da organização, sem
+  precisar de tabela de mapeamento. `CANCELLATION` isolado não derruba o
+  plano (assinatura continua válida até expirar de verdade); só
+  `EXPIRATION` volta pra `gratuito`. Testado ponta a ponta via `curl`
+  (401 sem auth, 200 no evento `TEST` do painel, compra sintética
+  virando `plano='anual'`/`plano_max_usuarios=7`, expiração voltando pro
+  gratuito) contra uma organização sintética, removida depois. Product
+  IDs esperados no Google Play/App Store/RevenueCat (nomes exatos, ou o
+  mapeamento no código precisa mudar): `spacerout_familia_anual` (Tier
+  1, 4 usuários) e `spacerout_familia_grande_anual` (Tier 2, 7
+  usuários). **Falta**: criar conta no RevenueCat, cadastrar esses dois
+  produtos (Play Console + RevenueCat), configurar o webhook no painel
+  do RevenueCat apontando pra
+  `https://kzizdekhohisnixyzlqj.supabase.co/functions/v1/webhook-revenuecat`
+  com o segredo (guardado só no Supabase Vault, não neste arquivo) no
+  campo "Authorization Header", e integrar o SDK `purchases_flutter` no
+  app (paywall, `Purchases.logIn`, tela de gerenciar assinatura) — nada
+  disso feito ainda.
 
 ### 🚧 Em aberto
 
@@ -434,12 +459,14 @@ linkado — `supabase db push` aplica migrations pendentes direto.
         documentação pelo Google
   - [ ] Ficha da loja (descrição, ícones, screenshots do app)
   - [ ] Build de release assinado (`flutter build appbundle`, keystore)
-  - [ ] Estratégia freemium — modelo e schema prontos (ver "Feito"
-        acima). Falta só a **integração RevenueCat**: produtos/preços
-        nas lojas (Tier 1 até 4 usuários R$89,90/ano; Tier 2 até 7
-        usuários R$149,90/ano) e o webhook que atualiza
-        `organizacoes_familiares.plano`/`plano_max_usuarios` quando uma
-        assinatura é confirmada/renovada/cancelada
+  - [ ] Estratégia freemium — modelo, schema e webhook prontos (ver
+        "Feito" acima). Falta: criar conta no RevenueCat, cadastrar os
+        produtos `spacerout_familia_anual` (Tier 1, R$89,90/ano) e
+        `spacerout_familia_grande_anual` (Tier 2, R$149,90/ano) no
+        Google Play Console, conectar ao RevenueCat, configurar o
+        webhook lá com o segredo já guardado no Supabase Vault, e
+        integrar `purchases_flutter` no app (paywall +
+        `Purchases.logIn(organizacaoId)`)
   - [ ] Os itens abaixo (revisar dados de teste, ícone de notificação,
         revisão jurídica) antes de submeter de verdade
 - [ ] **Requisitos novos de conta pessoal no Google Play** (descoberto
