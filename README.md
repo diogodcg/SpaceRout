@@ -617,15 +617,14 @@ linkado — `supabase db push` aplica migrations pendentes direto.
       já que 14 dias é mais rápido; falta confirmar se o usuário tem um
       Android físico à mão e reunir os 12 testadores pra começar a
       contagem o quanto antes.
-- [ ] **Preencher identificação legal em `docs/privacidade.html`**
-      (2026-07-27): o texto revisado juridicamente que o usuário trouxe
-      substituiu o rascunho anterior — cobre LGPD (art. 7º/14/18/41), Marco
-      Civil da Internet (guarda de registro de acesso, art. 15) e CDC
-      (cobrança de assinatura). Ficaram só os placeholders `[NOME DA EMPRESA
-      OU SEU NOME COMPLETO]`/`[00.000.000/0001-00]`/`[CIDADE/ESTADO]` na
-      seção "Quem somos", de propósito — a organização pessoa física vs. PJ
-      ainda está em aberto (ver checklist de lançamento). Preencher assim
-      que a decisão sair.
+- [x] ~~Preencher identificação legal em `docs/privacidade.html`~~ — feito
+      em 2026-07-27: o texto revisado juridicamente que o usuário trouxe
+      substituiu o rascunho anterior (cobre LGPD art. 7º/14/18/41, Marco
+      Civil da Internet art. 15, CDC pra cobrança de assinatura), e a seção
+      "Quem somos" já identifica **Diogo Campos Soluções Digitais**, CNPJ
+      68.206.836/0001-80, Brasília-DF — CNPJ já existe (pergunta em aberto
+      é só sobre a conta de desenvolvedor do Google Play, ver checklist de
+      lançamento acima).
 - [ ] **Consentimento parental de crianças (produto, não só texto)**: hoje
       o login é sempre social (Google/Apple), inclusive pro astronauta —
       não existe uma etapa separada de consentimento parental explícito
