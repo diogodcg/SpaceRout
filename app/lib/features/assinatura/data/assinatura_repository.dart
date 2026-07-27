@@ -1,9 +1,11 @@
+import 'dart:io' show Platform;
+
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 /// Fina camada sobre o SDK do RevenueCat. `Purchases.configure` já roda em
-/// `main.dart` (mesmo ponto de `Firebase.initializeApp`) — este repositório
-/// só cobre as ações depois disso: identificar a organização, listar
-/// ofertas e comprar/restaurar.
+/// `main.dart` (mesmo ponto de `Firebase.initializeApp`), mas só no
+/// Android — este repositório só cobre as ações depois disso: identificar
+/// a organização, listar ofertas e comprar/restaurar.
 class AssinaturaRepository {
   /// Associa o usuário do RevenueCat ao **id da organização**, não ao
   /// usuário individual — é a família que assina, não a pessoa. É assim
@@ -15,8 +17,15 @@ class AssinaturaRepository {
 
   /// Ofertas configuradas no RevenueCat (Product catalog → Offerings).
   /// Vazio até existir pelo menos uma — hoje não existe nenhuma, porque os
-  /// produtos dependem da conexão com o Google Play (ver README.md).
+  /// produtos dependem da conexão com o Google Play (ver README.md). No
+  /// iOS o SDK nunca é configurado (mesmo bloqueio de Apple Developer
+  /// Program pago do resto da assinatura) — chamar o SDK nesse estado
+  /// derruba o app com um fatalError nativo, então falha cedo aqui em vez
+  /// de deixar `Purchases.getOfferings()` crashar.
   Future<Offerings> buscarOfertas() {
+    if (!Platform.isAndroid) {
+      throw StateError('Assinatura ainda não disponível no iOS.');
+    }
     return Purchases.getOfferings();
   }
 
