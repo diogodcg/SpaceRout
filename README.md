@@ -617,11 +617,15 @@ linkado — `supabase db push` aplica migrations pendentes direto.
       já que 14 dias é mais rápido; falta confirmar se o usuário tem um
       Android físico à mão e reunir os 12 testadores pra começar a
       contagem o quanto antes.
-- [ ] **Revisão jurídica da política de privacidade**: o texto em
-      `docs/privacidade.html` foi escrito com cuidado (cobre LGPD art.
-      7º/14/18/41), mas não é validação jurídica formal. Recomendado
-      revisar com advogado antes de publicar nas lojas, especialmente
-      pela parte de consentimento parental de crianças.
+- [ ] **Preencher identificação legal em `docs/privacidade.html`**
+      (2026-07-27): o texto revisado juridicamente que o usuário trouxe
+      substituiu o rascunho anterior — cobre LGPD (art. 7º/14/18/41), Marco
+      Civil da Internet (guarda de registro de acesso, art. 15) e CDC
+      (cobrança de assinatura). Ficaram só os placeholders `[NOME DA EMPRESA
+      OU SEU NOME COMPLETO]`/`[00.000.000/0001-00]`/`[CIDADE/ESTADO]` na
+      seção "Quem somos", de propósito — a organização pessoa física vs. PJ
+      ainda está em aberto (ver checklist de lançamento). Preencher assim
+      que a decisão sair.
 - [ ] **Consentimento parental de crianças (produto, não só texto)**: hoje
       o login é sempre social (Google/Apple), inclusive pro astronauta —
       não existe uma etapa separada de consentimento parental explícito
