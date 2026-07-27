@@ -28,6 +28,7 @@ class RelatorioScreen extends ConsumerWidget {
               itemCount: lista.length,
               itemBuilder: (context, index) {
                 final astronauta = lista[index];
+                final expiradas = astronauta['missoes_expiradas'] as int? ?? 0;
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -47,7 +48,8 @@ class RelatorioScreen extends ConsumerWidget {
                         const SizedBox(height: 8),
                         Text(
                           '${astronauta['missoes_concluidas']} missões concluídas · '
-                          '${astronauta['missoes_em_aberto']} em aberto',
+                          '${astronauta['missoes_em_aberto']} em aberto'
+                          '${expiradas > 0 ? ' · $expiradas perdidas' : ''}',
                         ),
                         Text('${astronauta['premios_conquistados']} prêmios conquistados'),
                       ],

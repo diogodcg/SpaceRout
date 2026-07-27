@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.enviar-email-convite]
 verify_jwt = false
+
+[functions.reiniciar_missoes_recorrentes]
+verify_jwt = false

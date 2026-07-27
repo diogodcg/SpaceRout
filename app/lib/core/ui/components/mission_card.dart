@@ -24,7 +24,7 @@ class MissionCard extends StatelessWidget {
   final String title;
   final String description;
   final int coins;
-  final String status; // 'disponivel' | 'enviada' | 'aprovada' | 'rejeitada'
+  final String status; // 'disponivel' | 'enviada' | 'aprovada' | 'rejeitada' | 'expirada'
   final VoidCallback? onTap;
 
   /// Controles específicos da tela (ex.: switch ativa/inativa + editar +
@@ -51,6 +51,12 @@ class MissionCard extends StatelessWidget {
           color: AppColors.superNovaRed,
           icon: Icons.cancel_rounded,
           label: 'Rejeitada',
+        );
+      case 'expirada':
+        return (
+          color: AppColors.textSecondary,
+          icon: Icons.timer_off_rounded,
+          label: 'Perdida',
         );
       default:
         return (

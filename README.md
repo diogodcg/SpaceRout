@@ -507,8 +507,82 @@ linkado — `supabase db push` aplica migrations pendentes direto.
   vai ser visível de verdade quando os produtos reais existirem (ver
   item acima) — a lógica está escrita e comentada, mas o teste visual
   do badge fica pendente até lá.
+- **Recorrência real de missões diárias/semanais + lembretes periódicos**
+  (2026-07-27): filho do usuário testou o protótipo Streamlit e esqueceu
+  tarefas — investigando o push atual, achei duas lacunas reais: a
+  recorrência nunca tinha sido implementada (cada missão era um ciclo único,
+  documentado como "job futuro" no código) e o lembrete à criança era único
+  (1 push no horário `notificar_as`, sem repetição; só o responsável era
+  avisado de novo depois de 2h). Implementado: nova Edge Function
+  `reiniciar_missoes_recorrentes` (pg_cron 1x/dia, 00:05 horário de
+  Brasília) que expira ciclos `diaria`/`semanal` não cumpridos (novo status
+  `expirada`) ou arquiva os concluídos, e em ambos os casos cria o próximo
+  ciclo (nova linha) e notifica o astronauta ("Novo dia, nova missão!").
+  Achado crítico de design: o campo `ativa` (não `status`) é o que a trava
+  freemium conta, e nada o zerava automaticamente — o job arquiva
+  (`ativa=false`) a linha antiga ANTES de criar a nova, garantindo que o
+  total de itens ativos por organização nunca muda por causa da própria
+  reciclagem (senão cada reinício diário estouraria o limite de 3 em poucos
+  dias). `enviar-lembretes-missao` ganhou lembrete periódico (repete a cada
+  2h enquanto `disponivel`, mesmo intervalo do escalonamento) — nova coluna
+  `primeiro_lembrete_em` guarda o horário do primeiro toque, pra
+  escalonamento continuar medindo a partir dele e não do último lembrete
+  repetido. `relatorio_astronautas()` ganhou `missoes_expiradas` (Relatório
+  mostra "· N perdidas"); `MissoesRepository.listarMissoes()` passou a
+  filtrar `ativa=true` (sem isso, a tela "Missões" viraria uma lista
+  crescente sem fim com a recorrência ligada); `MissionCard` ganhou o status
+  `expirada` (cor/ícone é uma primeira proposta, a validar visualmente —
+  hoje nenhuma tela chega a renderizá-lo de fato, já que ciclos expirados
+  são arquivados no mesmo job, então é groundwork pra uma futura tela de
+  histórico). Testado ponta a ponta via `supabase db query --linked` +
+  `curl` contra dados sintéticos (organização/usuários/missões, removidos
+  depois): confirmado que um ciclo `aprovada` antigo e um `disponivel`
+  vencido reciclam corretamente (linha antiga arquivada, nova criada,
+  `expirada` só na que estava pendente) e que o lembrete periódico atualiza
+  `lembrete_enviado_em` sem tocar `primeiro_lembrete_em`, com o
+  escalonamento disparando corretamente a partir dele. Verificado também ao
+  vivo no emulador Android (`SpaceRout_Pixel_Play`), logado como responsável:
+  tela Missões só lista o ciclo atual de cada missão, e Relatório mostra
+  corretamente "· N perdidas" por astronauta.
+
+  **Bug real achado e corrigido durante esse teste ao vivo**: a organização
+  de demo (2 astronautas mock, já existente antes desta sessão) tem uma
+  missão "teste" (diária) atribuída a 2 astronautas, criada em 2026-07-22 —
+  antes do limite freemium apertar de 5 pra 3 (2026-07-25) — então a
+  organização já tinha mais itens ativos do que o limite atual permite
+  (dado "grandfathered"). Rodar o job de reciclagem nela reproduziu um caso
+  real: arquivar tudo primeiro e inserir um a um faz uma inserção no meio do
+  lote esbarrar na própria trava freemium da organização (o total de
+  `ativa=true` só volta ao normal no fim do lote, não entre cada inserção)
+  — a missão da "Astronauta Mock 1" expirou mas nunca ganhou um ciclo novo,
+  confirmado ao vivo no Relatório (ela ficou com 1 missão em aberto a menos
+  que a Mock 2). Corrigido: se a criação do próximo ciclo falha, o job tenta
+  reverter o arquivamento (`ativa=true` de novo) — cobre falhas transitórias
+  de verdade. Mas numa organização já acima do limite (esse caso), o
+  próprio revert esbarra na mesma trava (não tem como voltar sem violar o
+  limite de novo) — nesse cenário específico a missão fica arquivada sem
+  reciclar, e agora **loga alto** em vez de falhar em silêncio (antes, o
+  revert simplesmente não tinha checagem de erro nenhuma — falhava calado).
+  Confirmado o fix com um teste isolado (organização sintética com 4
+  missões diárias ativas — 1 a mais que o limite, simulando dado
+  grandfathered): das 4, 3 reciclaram normalmente e a 4ª ficou arquivada com
+  o erro logado claramente, sem nenhuma perdida silenciosamente. **Falta**:
+  a missão "teste" da Astronauta Mock 1 na organização de demo real segue
+  arquivada sem reciclar (efeito colateral do teste ao vivo, não corrigido
+  ainda porque mexer nos dados dessa organização foi bloqueado pelo
+  classificador de permissões da sessão) — Relatório, Missões e demais
+  telas ainda funcionam normalmente, só falta recriar essa missão de demo
+  manualmente (ou aceitar como está, já que essa organização inteira está
+  na lista de limpeza "antes de publicar"). `flutter analyze` limpo o tempo
+  todo.
 
 ### 🚧 Em aberto
+
+- [ ] **Recriar (ou aceitar como está) a missão "teste" da Astronauta Mock 1**
+      na organização de demo — ficou arquivada sem reciclar depois do teste
+      ao vivo do job de reciclagem (ver checkpoint acima). Baixa prioridade:
+      essa organização já está na lista de limpeza "antes de publicar"
+      abaixo.
 
 - [ ] **Lançar no Google Play essa semana** (meta confirmada em
       2026-07-23): Android primeiro por custo (taxa única de USD 25 vs.

@@ -6,16 +6,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// (`coordenadas_voo`). Envio de comprovação pelo astronauta passa pela RPC
 /// `enviar_comprovacao_missao` (não por aqui) — ver PLANO_MIGRACAO.md §5.5.2.
 /// Cada linha é um ciclo de missão; a criação automática do próximo ciclo
-/// (recorrência) é um job futuro, fora do escopo do cadastro em si.
+/// (recorrência) é feita pela Edge Function
+/// `reiniciar_missoes_recorrentes` (1x/dia via pg_cron), não por aqui.
 class MissoesRepository {
   MissoesRepository(this._supabase);
 
   final SupabaseClient _supabase;
 
+  /// Só o ciclo atual de cada missão (`ativa = true`) — com a recorrência
+  /// automática (ver `reiniciar_missoes_recorrentes`), cada missão diária/
+  /// semanal gera uma linha nova por ciclo e arquiva a anterior
+  /// (`ativa = false`), então listar tudo sem filtro viraria um histórico
+  /// crescente sem fim. O histórico completo por astronauta já existe em
+  /// `relatorio_astronautas()`.
   Future<List<Map<String, dynamic>>> listarMissoes() async {
     final rows = await _supabase
         .from('coordenadas_voo')
         .select()
+        .eq('ativa', true)
         .order('created_at', ascending: false);
     return List<Map<String, dynamic>>.from(rows);
   }
