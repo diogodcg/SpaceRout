@@ -584,12 +584,15 @@ linkado — `supabase db push` aplica migrations pendentes direto.
       essa organização já está na lista de limpeza "antes de publicar"
       abaixo.
 
-- [ ] **Lançar no Google Play essa semana** (meta confirmada em
-      2026-07-23): Android primeiro por custo (taxa única de USD 25 vs.
-      USD 99/ano da Apple). Falta:
-  - [x] Conta de desenvolvedor Google Play — taxa paga (2026-07-24),
-        cadastro/verificação em andamento, aguardando aprovação da
-        documentação pelo Google
+- [ ] **Lançar no Google Play** (meta original "essa semana" de
+      2026-07-23, **adiada** — ver decisão de rota PJ abaixo): Android
+      primeiro por custo (taxa única de USD 25 vs. USD 99/ano da Apple).
+      Falta:
+  - [x] ~~Conta de desenvolvedor Google Play pessoa física~~ — taxa paga
+        em 2026-07-24, **estornada em 2026-07-30** (trocou de rota, ver
+        item abaixo)
+  - [ ] Pagar taxa de desenvolvedor Google Play como **PJ**, assim que o
+        D-U-N-S sair
   - [ ] Ficha da loja (descrição, ícones, screenshots do app)
   - [ ] Build de release assinado (`flutter build appbundle`, keystore)
   - [ ] Estratégia freemium — modelo, schema, webhook e SDK no app
@@ -603,20 +606,18 @@ linkado — `supabase db push` aplica migrations pendentes direto.
         em `AssinaturaConfig`
   - [ ] Os itens abaixo (revisar dados de teste, ícone de notificação,
         revisão jurídica) antes de submeter de verdade
-- [ ] **Requisitos novos de conta pessoal no Google Play** (descoberto
-      2026-07-24, muda o plano de lançamento desta semana): contas
-      pessoais criadas depois de 13/nov/2023 (a nossa) exigem, antes de
-      liberar produção: (1) **teste fechado com 12 testadores** (número
-      caiu de 20 pra 12 em dez/2024) com opt-in **contínuo por 14 dias
-      corridos** — sair e voltar zera a contagem da pessoa; e (2)
-      **verificação de identidade num Android físico real** (Android
-      10+, sem root, via app do Play Console — emulador não serve).
-      Conta de **Organização** parece ficar isenta das duas exigências,
-      mas essa rota exige D-U-N-S number (até 30 dias) — pior prazo que
-      os 14 dias do teste fechado. Decisão: seguir como pessoa física,
-      já que 14 dias é mais rápido; falta confirmar se o usuário tem um
-      Android físico à mão e reunir os 12 testadores pra começar a
-      contagem o quanto antes.
+- [ ] **Conta de desenvolvedor Google Play como Organização/PJ**
+      (decisão final em 2026-07-30, substitui a rota pessoa física
+      cogitada em 2026-07-24): contas pessoais criadas depois de
+      13/nov/2023 (a nossa) exigem, antes de liberar produção, teste
+      fechado com 12 testadores por 14 dias corridos + verificação de
+      identidade num Android físico real — conta de **Organização** fica
+      isenta das duas, mas exige **D-U-N-S number**. CNPJ já aberto
+      (**Diogo Campos Soluções Digitais**, 68.206.836/0001-80,
+      Brasília-DF), **D-U-N-S solicitado em 2026-07-28** pelo sistema
+      gratuito (prazo de até 30 dias, expectativa ~2026-08-27) — esse é
+      hoje o **caminho crítico do lançamento**. Taxa de PF já estornada;
+      assim que o D-U-N-S sair, paga a taxa de novo como PJ.
 - [x] ~~Preencher identificação legal em `docs/privacidade.html`~~ — feito
       em 2026-07-27: o texto revisado juridicamente que o usuário trouxe
       substituiu o rascunho anterior (cobre LGPD art. 7º/14/18/41, Marco
@@ -637,13 +638,29 @@ linkado — `supabase db push` aplica migrations pendentes direto.
       "quem convidou passar o aplicativo" porque o app ainda não está
       publicado. Assim que sair a ficha na Play Store, trocar esse
       trecho por um link direto de download.
-- [ ] **Ícone de notificação monocromático (Android)**: a barra de status
-      do Android hoje herda o ícone colorido do app (`Stellar`), mas a
-      guideline do Material Design pede um ícone dedicado, só silhueta
-      branca. Ainda não feito, mas o motivo antigo (falta de emulador
-      Android) não existe mais — emulador `SpaceRout_Pixel_Play`
-      configurado em 2026-07-23 (Google Play, ver checkpoint abaixo),
-      dá pra validar visualmente quando for fazer.
+- [x] ~~Ícone de notificação monocromático (Android)~~ — feito em
+      2026-07-30: a barra de status herdava o ícone colorido do app
+      (`Stellar`), mas a guideline do Material Design pede um ícone
+      dedicado, só silhueta branca (Android usa só o canal alfa da
+      imagem). Criada uma versão monocromática só da fagulha do mascote
+      (`assets/branding/ic_stat_stellar.svg`, rasterizada em PNG nas 5
+      densidades pra `android/app/src/main/res/drawable-*dpi/`), ligada
+      via `com.google.firebase.messaging.default_notification_icon` +
+      `default_notification_color` (`stardustYellow`, `#FFE082`) no
+      `AndroidManifest.xml` — cobre todas as notificações do FCM
+      automaticamente, sem mudar o edge function. Testado ponta a ponta
+      de verdade no emulador `SpaceRout_Pixel_Play`: backdatei
+      temporariamente a missão de teste "teste" pra forçar o
+      `pg_cron`/`enviar-lembretes-missao` a disparar um escalonamento
+      real (não deu pra usar o clássico `curl` porque o
+      `CRON_SHARED_SECRET` não fica acessível localmente) — confirmei a
+      fagulha branca na barra de status e o emblema amarelo na gaveta de
+      notificações, depois revertido ao estado original (`notificar_as`/
+      `primeiro_lembrete_em`/`escalonado_em` de volta a `null`). Achado
+      no caminho: com o app em primeiro plano o Android não exibe a
+      notificação automaticamente (comportamento padrão do FCM, não bug
+      nosso) — só precisei colocar o app em segundo plano pra ver o
+      ícone renderizado.
 - [ ] **Antes de publicar**: revisar/apagar organizações e convites de
       teste usados durante o desenvolvimento (ex.: organização atual
       "Cau Gomes - Teste") — inclui os 2 astronautas mock (2026-07-22,

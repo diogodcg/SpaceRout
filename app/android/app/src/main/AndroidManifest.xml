@@ -25,6 +25,16 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Ícone/cor padrão da notificação (barra de status) — Android só
+             usa o canal alfa dessa imagem, por isso é uma silhueta branca
+             (a fagulha do Stellar) em vez do ícone colorido do app, seguindo
+             a guideline do Material Design. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_stellar" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
