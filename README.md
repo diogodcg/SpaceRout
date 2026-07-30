@@ -578,11 +578,10 @@ linkado — `supabase db push` aplica migrations pendentes direto.
 
 ### 🚧 Em aberto
 
-- [ ] **Recriar (ou aceitar como está) a missão "teste" da Astronauta Mock 1**
-      na organização de demo — ficou arquivada sem reciclar depois do teste
-      ao vivo do job de reciclagem (ver checkpoint acima). Baixa prioridade:
-      essa organização já está na lista de limpeza "antes de publicar"
-      abaixo.
+- [x] ~~Recriar (ou aceitar como está) a missão "teste" da Astronauta
+      Mock 1~~ — resolvido por conta própria em 2026-07-30: a organização
+      de demo inteira foi apagada na limpeza total do banco (ver "Antes
+      de publicar" abaixo), então a missão arquivada não existe mais.
 
 - [ ] **Lançar no Google Play** (meta original "essa semana" de
       2026-07-23, **adiada** — ver decisão de rota PJ abaixo): Android
@@ -671,11 +670,14 @@ linkado — `supabase db push` aplica migrations pendentes direto.
       notificação automaticamente (comportamento padrão do FCM, não bug
       nosso) — só precisei colocar o app em segundo plano pra ver o
       ícone renderizado.
-- [ ] **Antes de publicar**: revisar/apagar organizações e convites de
-      teste usados durante o desenvolvimento (ex.: organização atual
-      "Cau Gomes - Teste") — inclui os 2 astronautas mock (2026-07-22,
-      com missões/suprimentos/resgate sintéticos) criados pra demo
-      manual do projeto, deixados de propósito até essa etapa
+- [x] ~~Antes de publicar: revisar/apagar organizações e convites de
+      teste~~ — feito em 2026-07-30: usuário pediu limpeza total do
+      banco. Apagada `organizacoes_familiares` (única linha, "Cau Gomes-
+      Teste 2"), cascade zerou usuários, missões, suprimentos, resgates,
+      convites, dispositivos de notificação e atribuições — inclui os 2
+      astronautas mock (2026-07-22) deixados de propósito pra demo
+      manual. `auth.users` (login Google) ficou intacto, mesmo padrão de
+      sempre.
 - [ ] **Sign in with Apple**: adiado — precisa de conta paga no Apple
       Developer Program, que o usuário ainda não tem. O botão de Apple já
       existe na `LoginScreen` (só aparece em iOS/macOS) mas vai dar erro se
