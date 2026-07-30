@@ -29,6 +29,7 @@ class _ConviteFormScreenState extends ConsumerState<ConviteFormScreen> {
   bool _loading = false;
   String? _error;
   bool _erroEhLimitePlano = false;
+  bool _consentimentoLgpd = false;
 
   @override
   void dispose() {
@@ -38,6 +39,10 @@ class _ConviteFormScreenState extends ConsumerState<ConviteFormScreen> {
 
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_role == 'astronauta' && !_consentimentoLgpd) {
+      setState(() => _error = 'Confirme o consentimento antes de enviar o convite.');
+      return;
+    }
 
     setState(() {
       _loading = true;
@@ -50,6 +55,7 @@ class _ConviteFormScreenState extends ConsumerState<ConviteFormScreen> {
             organizacaoId: usuario!['organizacao_id'] as String,
             email: _emailController.text.trim(),
             role: _role,
+            consentimentoLgpd: _consentimentoLgpd,
           );
       ref.invalidate(convitesListProvider);
       if (mounted) Navigator.of(context).pop();
@@ -92,8 +98,27 @@ class _ConviteFormScreenState extends ConsumerState<ConviteFormScreen> {
                   for (final entry in _roles.entries)
                     DropdownMenuItem(value: entry.key, child: Text(entry.value)),
                 ],
-                onChanged: _loading ? null : (value) => setState(() => _role = value!),
+                onChanged: _loading
+                    ? null
+                    : (value) => setState(() {
+                          _role = value!;
+                          if (_role != 'astronauta') _consentimentoLgpd = false;
+                        }),
               ),
+              if (_role == 'astronauta') ...[
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  value: _consentimentoLgpd,
+                  onChanged: _loading ? null : (value) => setState(() => _consentimentoLgpd = value ?? false),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(
+                    'Confirmo que sou responsável legal por esta criança/adolescente e '
+                    'autorizo o tratamento dos dados dela, conforme a Política de '
+                    'Privacidade (art. 14 da LGPD).',
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               PrimarySpaceButton(
                 label: 'Enviar convite',

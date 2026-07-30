@@ -626,12 +626,22 @@ linkado — `supabase db push` aplica migrations pendentes direto.
       68.206.836/0001-80, Brasília-DF — CNPJ já existe (pergunta em aberto
       é só sobre a conta de desenvolvedor do Google Play, ver checklist de
       lançamento acima).
-- [ ] **Consentimento parental de crianças (produto, não só texto)**: hoje
-      o login é sempre social (Google/Apple), inclusive pro astronauta —
-      não existe uma etapa separada de consentimento parental explícito
-      no fluxo de convite/onboarding além do responsável digitar o e-mail
-      da criança. Vale decidir com calma se isso precisa de um passo a
-      mais no fluxo antes de publicar de verdade.
+- [x] ~~Consentimento parental de crianças (produto, não só texto)~~ —
+      feito em 2026-07-30: a política de privacidade já afirmava que
+      convidar um astronauta concede "consentimento específico e
+      destacado" (art. 14 da LGPD), mas a tela de convite não pedia nada
+      além do e-mail — a UI não sustentava o que o texto jurídico
+      prometia. Adicionado um `CheckboxListTile` em
+      `convite_form_screen.dart`, visível só quando o papel é "Astronauta
+      (criança)", obrigatório pra habilitar o envio (bloqueia com
+      mensagem clara se desmarcado). O aceite grava
+      `consentimento_lgpd_em` em `convites_familiares`
+      (`20260730000000_consentimento_lgpd_convite_astronauta.sql`), com
+      check constraint no banco garantindo que todo convite de
+      astronauta tem esse timestamp — não é só validação de UI. Testado
+      ao vivo no emulador nos 3 cenários: bloqueio sem marcar, envio com
+      consentimento gravado corretamente, e convite de responsável
+      (checkbox nem aparece) inalterado.
 
 - [ ] **Atualizar texto do e-mail de convite com link da loja**: hoje
       (`supabase/functions/enviar-email-convite/index.ts`) pede pra
