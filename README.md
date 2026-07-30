@@ -627,7 +627,7 @@ linkado — `supabase db push` aplica migrations pendentes direto.
       é só sobre a conta de desenvolvedor do Google Play, ver checklist de
       lançamento acima).
 - [x] ~~Consentimento parental de crianças (produto, não só texto)~~ —
-      feito em 2026-07-30: a política de privacidade já afirmava que
+      feito em 2026-07-30 (tag `v0.1.6`): a política de privacidade já afirmava que
       convidar um astronauta concede "consentimento específico e
       destacado" (art. 14 da LGPD), mas a tela de convite não pedia nada
       além do e-mail — a UI não sustentava o que o texto jurídico
@@ -649,7 +649,7 @@ linkado — `supabase db push` aplica migrations pendentes direto.
       publicado. Assim que sair a ficha na Play Store, trocar esse
       trecho por um link direto de download.
 - [x] ~~Ícone de notificação monocromático (Android)~~ — feito em
-      2026-07-30: a barra de status herdava o ícone colorido do app
+      2026-07-30 (tag `v0.1.6`): a barra de status herdava o ícone colorido do app
       (`Stellar`), mas a guideline do Material Design pede um ícone
       dedicado, só silhueta branca (Android usa só o canal alfa da
       imagem). Criada uma versão monocromática só da fagulha do mascote
